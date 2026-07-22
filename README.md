@@ -4,19 +4,20 @@
 > Một script tổng (`install.sh`) đóng vai trò như "package manager" riêng,
 > cài đặt các script con (gọi là **component**) được lưu trong repo này.
 
-**📚 Tài liệu liên quan:** [`CHANGELOG.md`](./CHANGELOG.md) — lịch sử thay đổi theo version.
-
 ---
 
 ## 🎯 Mục đích dự án
 
-- Gom mọi script cá nhân vào **một repo duy nhất**, cài nhanh trên máy mới
-  chỉ bằng `git clone` + `bash install.sh`
-- Mỗi component tự quản lý dữ liệu, phím tắt, dependency của riêng nó,
-  sửa/thêm tính năng cho component nào thì đụng trực tiếp file của
-  component đó
-- Ưu tiên **đơn giản, ít rủi ro** hơn là gọn code — chấp nhận có phần
-  logic lặp lại giữa các component, miễn không phát sinh bug
+Thay vì rải rác nhiều script lẻ trên máy, My-caelestia gom tất cả vào **một
+repo GitHub duy nhất**, có cấu trúc rõ ràng để:
+
+- Cài đặt nhanh trên máy mới chỉ bằng `git clone` + `bash install.sh`
+- Thêm tính năng mới (component mới) mà **không phải sửa code cũ**
+- Mỗi component tự quản lý dữ liệu, phím tắt, dependency của riêng nó
+
+Đây là dự án đang phát triển dần — mỗi lần thêm component là một buổi làm
+việc riêng. README này + `RULE.md` + `UPDATE.md` dùng để bất kỳ ai (hoặc
+Claude ở phiên chat sau) đọc vào là hiểu ngay hiện trạng và mục tiêu.
 
 ---
 
@@ -24,123 +25,130 @@
 
 ```
 my-caelestia/
-├── install.sh            # Script tổng — hiện menu chọn component để cài
-├── manifest.json          # Danh sách component đang có
-├── README.md               # File này
-├── CHANGELOG.md             # Lịch sử thay đổi, theo version
+├── install.sh                 # Script tổng — chạy đầu tiên khi setup máy mới
+├── manifest.json               # Danh sách component đang có (hiện tại: launcher)
+├── README.md                   # File này
+├── RULE.md                     # Quy ước code khi sửa/thêm component
+├── UPDATE.md                   # Việc đang làm dở, kế hoạch vá cụ thể
 └── components/
-    ├── launcher/
-    │   ├── install.sh         # Cài đặt launcher
-    │   └── launcher.sh        # TUI chọn app/web
-    └── quickedit/
-        ├── install.sh         # Cài đặt quickedit
-        └── quickedit.sh       # TUI mở nhanh file để sửa
+    └── launcher/
+        ├── install.sh           # Cài đặt riêng cho launcher
+        └── launcher.sh          # Script chạy thực tế (TUI chọn app/web)
 ```
 
-Trên máy sau khi cài:
-```
-~/.local/bin/launcher
-~/.local/bin/quickedit
-```
+**Nguyên tắc cố định:**
+
+- Mỗi component là **1 thư mục con trong `components/`**
+- Bắt buộc phải có file `install.sh` bên trong — đây là điểm mà script tổng
+  gọi vào để cài đặt component đó
+- Các file khác trong component (tên, số lượng) do component đó tự quyết
+  định, script tổng không quan tâm
+- Quy ước chi tiết hơn khi sửa/thêm component: xem `RULE.md`
 
 ---
 
-## 🚀 Cài đặt
+## 🚀 Cài đặt trên máy mới
 
-```bash
-git clone https://github.com/nguyen-mowftee2006/my-caelestia
+```
+git clone <url-repo-cua-ban> my-caelestia
 cd my-caelestia
 bash install.sh
 ```
 
-Script tổng: kiểm tra Arch Linux → tự cài `jq`/`fzf` nếu thiếu → hiện menu
-chọn component (`TAB` để chọn nhiều). Component nào lỗi khi cài sẽ được
-báo rõ và liệt kê ở bảng tổng kết cuối, không làm dừng các component khác.
+Script tổng sẽ:
 
-| Lệnh                        | Ý nghĩa                                    |
-|------------------------------|---------------------------------------------|
-| `bash install.sh`           | Hiện menu chọn component cần cài            |
-| `bash install.sh launcher`  | Cài thẳng 1 component cụ thể, bỏ qua menu   |
-| `bash install.sh --all`     | Cài tất cả component có trong manifest      |
+1. Kiểm tra máy có phải Arch Linux không (cảnh báo nếu không phải)
+2. Tự cài `jq` và `fzf` nếu thiếu (cần cho việc đọc `manifest.json` và hiện menu)
+3. Hiện menu chọn component muốn cài (chọn nhiều bằng phím `TAB`)
 
-**Lưu ý cho người dùng shell `fish`:** sau khi cài, nếu `~/.local/bin`
-chưa có trong `PATH`, chạy thêm:
-```bash
-fish_add_path ~/.local/bin
-```
-(người dùng `bash`/`zsh` làm theo hướng dẫn script tự in ra lúc cài)
+**Các cách gọi khác:**
+
+| Lệnh                       | Ý nghĩa                                              |
+| -------------------------- | ----------------------------------------------------- |
+| `bash install.sh`          | Hiện menu chọn component cần cài                      |
+| `bash install.sh launcher` | Cài thẳng **1** component cụ thể (`launcher`), bỏ qua menu |
+| `bash install.sh --all`    | Cài **tất cả** component có trong `manifest.json`      |
 
 ---
 
-## 🧩 Danh sách component
+## 🧩 Danh sách component hiện có
 
 ### 1. `launcher` — Chọn nhanh app/website
 
-TUI `fzf`, thêm/xóa shortcut app hoặc web, chọn là chạy ngay; phân biệt
-lệnh cần `sudo` hay không.
+TUI dùng `fzf`, cho thêm/xóa shortcut tới ứng dụng hoặc trang web, chọn là
+chạy ngay. Có phân biệt lệnh cần quyền `sudo` hay không.
 
-- Cài lệnh `launcher` vào `~/.local/bin/`; lúc cài hỏi phím tắt, tự ghi
-  vào `~/.config/hypr/conf/launcher_keybind.conf` rồi `hyprctl reload`
-- Dữ liệu: `~/.config/quicklauncher/items.tsv`
-  (`Tên<TAB>cần_root(0/1)<TAB>Lệnh`)
-- Phím tắt mở **terminal mới** rồi chạy `launcher` bên trong; lệnh không
-  cần root mà lỗi ngay sẽ báo lỗi tại chỗ, chi tiết ở
-  `~/.config/quicklauncher/launch.log`
-- Không autostart — chỉ chạy khi gọi chủ động
+- Cài lệnh `launcher` vào `~/.local/bin/`
+- Lúc cài sẽ hỏi tổ hợp phím tắt, tự ghi vào
+  `~/.config/hypr/conf/launcher_keybind.conf` và gọi `hyprctl reload`
+- Dữ liệu lưu tại `~/.config/quicklauncher/items.tsv` (định dạng TSV:
+  `Tên<TAB>cần_root(0/1)<TAB>Lệnh`)
+- Trạng thái: ✅ đã code xong phần thêm/xóa/chạy shortcut + fix PATH cho
+  shell `fish`. Đang chờ test thủ công thực tế qua `install.sh` tổng
+  (xem `UPDATE.md`).
 
 ### 2. `quickedit` — Mở nhanh file để sửa
 
-TUI `fzf`, lưu **tiêu đề → đường dẫn file**, chọn là mở thẳng bằng trình
-soạn thảo (vd: đặt tiêu đề `configkey` trỏ tới
-`~/.config/hypr/conf/keybinds.conf`, lần sau chọn `configkey` là vào sửa
-ngay, không cần gõ đường dẫn).
-
-- Cài lệnh `quickedit` vào `~/.local/bin/`; lúc cài hỏi trình soạn thảo
-  mặc định (ưu tiên đã lưu → `$EDITOR` → `nano`)
-- Dữ liệu: `~/.config/quickedit/files.tsv` (`Tiêu_đề<TAB>Đường_dẫn`)
-- Chỉ chạy bằng gõ lệnh tay, chưa có bước gán phím tắt như `launcher`
+**Chưa triển khai.** Ý tưởng: TUI dùng `fzf`, lưu danh sách **tiêu đề →
+đường dẫn file**, chọn là mở thẳng file đó bằng trình soạn thảo. Sẽ làm sau
+khi `launcher` test xong qua script tổng.
 
 ---
 
-## ➕ Thêm component mới
+## ➕ Cách thêm component mới
 
-1. Tạo `components/ten-moi/install.sh` (bắt buộc — script tổng gọi vào
-   khi cài) + script chạy thực tế (tên tùy component)
-2. Thêm 1 phần tử vào `manifest.json`:
-   ```json
-   { "name": "ten-moi", "description": "Mo ta ngan gon", "path": "components/ten-moi" }
-   ```
-3. Nếu component cần xử lý danh sách kiểu TSV (xóa/ghi đè 1 dòng theo
-   tên), luôn so khớp **chính xác toàn bộ cột** bằng `awk`, không dùng
-   `grep -P`/`grep -F` — 2 lỗi này từng gây mất dữ liệu thật, xem
-   `CHANGELOG.md` mục `[1.0.1]`:
-   ```bash
-   awk -F'\t' -v n="$name" '$1 != n' "$CONFIG_FILE" > "$tmp" && mv "$tmp" "$CONFIG_FILE"
-   ```
-4. Không cần dùng lại hàm từ component khác — component mới có thể tự
-   viết logic riêng, kể cả khi giống component cũ. Ưu tiên đơn giản, dễ
-   sửa độc lập hơn là tránh trùng lặp.
+Chỉ cần đụng vào **2 chỗ**, không sửa `install.sh` tổng:
+
+**Bước 1 — Tạo thư mục component:**
+
+```
+components/ten-component-moi/
+├── install.sh     # bắt buộc
+└── ...            # các file khác tùy component
+```
+
+**Bước 2 — Thêm 1 phần tử vào `manifest.json`:**
+
+```json
+{
+  "name": "ten-component-moi",
+  "description": "Mo ta ngan gon component nay lam gi",
+  "path": "components/ten-component-moi"
+}
+```
+
+Script tổng chỉ làm 1 việc với mọi component: ghép `SCRIPT_DIR/<path>/install.sh`
+rồi chạy. Component nào cần dependency gì, tự lo trong `install.sh` của
+chính nó (theo mẫu `pacman -S --needed <gói>`).
+
+Quy ước chi tiết (đặt tên, xử lý TSV, xử lý shell fish, thao tác xóa...):
+xem `RULE.md`.
 
 ---
 
-## 🖥️ Môi trường
+## 🖥️ Ghi chú môi trường
 
-- Distro: **Arch Linux**, WM: **Hyprland** (theme **Calestia**)
-- Dùng `bash`, `fzf`, `jq` — không dùng `apt`/`gsettings`/GNOME
-- Phím tắt: component tự ghi vào `~/.config/hypr/conf/*.conf`, `source`
-  vào `hyprland.conf`, rồi `hyprctl reload`
-- Shell mặc định người dùng có thể là `fish` — các bước liên quan `PATH`
-  cần tính tới trường hợp này (xem mục Cài đặt)
+- Distro mục tiêu: **Arch Linux**
+- Window Manager: **Hyprland** (theo theme **Calestia**)
+- Các script dùng `bash`, `fzf`, `jq` — không dùng `apt`/`gsettings`/GNOME
+- Phím tắt hệ thống được các component tự ghi vào
+  `~/.config/hypr/conf/*.conf` rồi `source` vào `hyprland.conf`, sau đó gọi
+  `hyprctl reload` — **không** dùng `gsettings` (đó là của GNOME, không áp
+  dụng cho Hyprland)
 
 ---
 
-## 📝 Trạng thái
+## 📝 Trạng thái / việc dở dang
 
-- ✅ `quickedit` — hoàn chỉnh (thêm/xóa/mở file, đổi trình soạn thảo)
-- 🟡 `launcher` — đang bổ sung: chức năng xóa mục (hiện chỉ có thêm mới),
-  xác nhận trước khi xóa, sửa PATH cho shell `fish`
-- 💡 `check` (so sánh thư mục với checklist file cần có) — ý tưởng tạm
-  dừng, có thể làm sau
+- ✅ `install.sh` (script tổng) — đã code xong, đọc `manifest.json` qua `jq`,
+  hỗ trợ menu / cài theo tên / `--all`
+- ✅ `manifest.json` — đã tạo, hiện chỉ khai báo `launcher` để test trước
+- 🟡 `launcher` — code đã xong (kể cả 2 việc từng ghi ở `UPDATE.md`: xóa mục
+  + fix PATH cho fish), đang chờ **test thủ công qua `install.sh` tổng**
+- ⛔ `quickedit` — chưa làm, tạm gác lại
+- 💡 Từng có ý tưởng component `check` (so sánh thư mục với checklist file
+  cần có, báo thiếu/thừa) — chưa có kế hoạch cụ thể
 
-⚠️ Chưa test trong môi trường Hyprland thật (fzf tương tác, `hyprctl
-reload`, phím tắt). Không hỗ trợ cài qua `curl | bash`.
+Khi trò chuyện với Claude ở phiên sau, có thể gửi kèm README này + `RULE.md`
++ `UPDATE.md` để Claude nắm ngay cấu trúc dự án, quy ước đặt tên, và việc
+đang làm dở, tránh phải giải thích lại từ đầu.

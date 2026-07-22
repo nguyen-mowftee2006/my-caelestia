@@ -24,6 +24,8 @@ components/ten-component/
   component tự quyết định cấu trúc bên trong thư mục của mình
 - Script tổng (`install.sh` ở gốc repo) chỉ làm đúng 1 việc: tìm và chạy
   `components/<ten>/install.sh` — không có cơ chế action tổng quát
+- Mọi component **phải** được khai báo trong `manifest.json` ở gốc repo
+  (xem mục 7) thì script tổng mới thấy và cài được
 
 ## 2. Sửa/thêm tính năng — đụng đúng 1 component
 
@@ -33,7 +35,7 @@ components/ten-component/
   logic giống nhau (vd xóa 1 dòng trong TSV) → **copy logic đó vào cả 2
   nơi**, chấp nhận trùng lặp, không gộp thành 1 hàm chung
 - Lý do: tránh 1 thay đổi ảnh hưởng dây chuyền tới component khác — sửa
-  `launcher` không bao giờ có nguy cơ làm hỏng `quickedit`, và ngược lại
+  `launcher` không bao giờ có nguy cơ làm hỏng component khác, và ngược lại
 
 ## 3. Xử lý dữ liệu dạng TSV (tên/tiêu đề + dữ liệu)
 
@@ -47,7 +49,10 @@ components/ten-component/
 - **Không dùng `grep -F`** dù fixed-string (không neo đầu dòng, khớp nhầm
   chuỗi con ở cột khác — vd tên `"0"` khớp nhầm cột `root_flag` của dòng
   khác)
-- Đây là bug thật đã xảy ra và fix — chi tiết ở `CHANGELOG.md` mục `[1.0.1]`
+- Đây là bug thật đã xảy ra và fix trong component `launcher` — đã áp
+  dụng đúng cách này trong `remove_entry_by_name` (xem `UPDATE.md`).
+  Khi có `CHANGELOG.md` (chưa tạo — xem mục 6), ghi chi tiết bug này vào
+  đó dưới mục version tương ứng
 - Quy tắc này **bắt buộc dù có chấp nhận trùng lặp code** — an toàn dữ
   liệu quan trọng hơn việc tránh lặp
 
@@ -61,7 +66,8 @@ components/ten-component/
   - `bash`/`zsh`: `export PATH="$HOME/.local/bin:$PATH"` ghi vào
     `~/.bashrc`/`~/.zshrc`
 - Đây là bug thật đã gặp (script chỉ gợi ý sửa `.bashrc`, không hoạt động
-  với `fish`) — xem `UPDATE.md` để biết tiến độ vá
+  với `fish`) — đã vá trong `components/launcher/install.sh`, xem
+  `UPDATE.md` để biết chi tiết bản vá
 
 ## 5. Thao tác nguy hiểm (xóa dữ liệu)
 
@@ -85,6 +91,9 @@ components/ten-component/
 - Chỉ sửa lỗi → tăng `PATCH`
 - Mọi thay đổi ảnh hưởng người dùng → ghi vào `CHANGELOG.md` (không ghi
   refactor nội bộ/commit vụn vặt)
+- **Lưu ý hiện tại:** `CHANGELOG.md` **chưa được tạo** trong repo. Tạo file
+  này khi đóng bản release đầu tiên (`v1.0.0`) hoặc khi hoàn tất bugfix ở
+  `UPDATE.md` mục 3 Bước 4 — không tạo trước khi có nội dung thật để ghi
 
 ## 7. Checklist thêm component mới
 
@@ -93,5 +102,7 @@ components/ten-component/
    cảnh báo/sửa `PATH` (có tính fish theo mục 4)
 2. Tạo `components/ten-moi/ten-moi.sh` — script chạy thực tế, tự viết
    toàn bộ logic cần thiết (không cần tìm hàm dùng chung ở đâu khác)
-3. Thêm 1 phần tử vào `manifest.json`
+3. Thêm 1 phần tử vào `manifest.json` (xem mẫu ở `README.md` phần "Cách
+   thêm component mới") — thiếu bước này thì script tổng sẽ không thấy
+   component, dù thư mục và `install.sh` đã có sẵn
 4. Nếu có thao tác xóa/ghi đè dữ liệu → áp dụng mục 3 và 5 ở trên

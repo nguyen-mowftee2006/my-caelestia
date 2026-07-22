@@ -1,0 +1,7 @@
+[
+  {
+    "name": "launcher",
+    "description": "Chon nhanh app/website qua fzf, luu shortcut vao TSV",
+    "path": "components/launcher"
+  }
+]
