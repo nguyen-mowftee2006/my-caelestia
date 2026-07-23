@@ -33,7 +33,8 @@ my-caelestia/
 └── components/
     └── launcher/
         ├── install.sh           # Cài đặt riêng cho launcher
-        └── launcher.sh          # Script chạy thực tế (TUI chọn app/web)
+        ├── launcher.sh          # Script chạy thực tế (TUI chọn app/web)
+        └── KEYBIND.md           # Hướng dẫn tự gán phím tắt Hyprland
 ```
 
 **Nguyên tắc cố định:**
@@ -79,8 +80,8 @@ TUI dùng `fzf`, cho thêm/xóa shortcut tới ứng dụng hoặc trang web, ch
 chạy ngay. Có phân biệt lệnh cần quyền `sudo` hay không.
 
 - Cài lệnh `launcher` vào `~/.local/bin/`
-- Lúc cài sẽ hỏi tổ hợp phím tắt, tự ghi vào
-  `~/.config/hypr/conf/launcher_keybind.conf` và gọi `hyprctl reload`
+- **Không** tự động gán phím tắt Hyprland nữa — sau khi cài, tự bind phím
+  theo hướng dẫn ở [`components/launcher/KEYBIND.md`](./components/launcher/KEYBIND.md)
 - Dữ liệu lưu tại `~/.config/quicklauncher/items.tsv` (định dạng TSV:
   `Tên<TAB>cần_root(0/1)<TAB>Lệnh`)
 - Trạng thái: ✅ đã code xong phần thêm/xóa/chạy shortcut + fix PATH cho

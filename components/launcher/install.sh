@@ -6,6 +6,9 @@
 # Biến COMPONENT_DIR được install.sh (script tổng) truyền vào, trỏ tới
 # thư mục components/launcher — nếu chạy lẻ script này thì tự suy ra.
 #
+# LƯU Ý: bản này KHÔNG tự gán phím tắt Hyprland nữa. Tự bind phím theo
+# hướng dẫn ở components/launcher/KEYBIND.md sau khi cài xong.
+#
 set -uo pipefail
 
 COMPONENT_DIR="${COMPONENT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
@@ -58,73 +61,10 @@ case ":$PATH:" in
         ;;
 esac
 
-echo "== 4. Gán phím tắt trong Hyprland =="
-if ! command -v hyprctl >/dev/null 2>&1; then
-    echo "Không phát hiện Hyprland (thiếu hyprctl) — bỏ qua bước gán phím tắt."
-    echo "Bạn có thể tự gọi lệnh 'launcher' trong terminal bất kỳ."
-else
-    # Tìm terminal emulator có sẵn trên máy
-    TERMINALS=(kitty alacritty foot wezterm konsole)
-    TERM_BIN=""
-    for t in "${TERMINALS[@]}"; do
-        if command -v "$t" >/dev/null 2>&1; then
-            TERM_BIN="$t"
-            break
-        fi
-    done
-
-    if [ -z "$TERM_BIN" ]; then
-        read -rp "Không tự nhận diện được terminal, nhập tên lệnh terminal bạn dùng: " TERM_BIN
-    fi
-
-    read -rp "Nhập tổ hợp phím muốn gán (mặc định 'SUPER, W'): " KEY_COMBO
-    KEY_COMBO="${KEY_COMBO:-SUPER, W}"
-
-    HYPR_DIR="$HOME/.config/hypr/conf"
-    KEYBIND_FILE="$HYPR_DIR/launcher_keybind.conf"
-    mkdir -p "$HYPR_DIR"
-
-    case "$TERM_BIN" in
-        kitty)      EXEC_CMD="kitty --class launcher -e $HOME/.local/bin/launcher" ;;
-        alacritty)  EXEC_CMD="alacritty --class launcher -e $HOME/.local/bin/launcher" ;;
-        foot)       EXEC_CMD="foot -a launcher $HOME/.local/bin/launcher" ;;
-        wezterm)    EXEC_CMD="wezterm start -- $HOME/.local/bin/launcher" ;;
-        konsole)    EXEC_CMD="konsole -e $HOME/.local/bin/launcher" ;;
-        *)          EXEC_CMD="$TERM_BIN -e $HOME/.local/bin/launcher" ;;
-    esac
-
-    if {
-        echo "# File này do My-caelestia (component launcher) tự sinh ra"
-        echo "bind = $KEY_COMBO, exec, $EXEC_CMD"
-    } > "$KEYBIND_FILE"; then
-        echo "Đã ghi keybind vào: $KEYBIND_FILE"
-    else
-        echo "Lỗi: không ghi được file keybind $KEYBIND_FILE — bỏ qua bước gán phím tắt."
-        KEYBIND_FILE=""
-    fi
-
-    HYPR_MAIN="$HOME/.config/hypr/hyprland.conf"
-    if [ -n "$KEYBIND_FILE" ] && [ -f "$HYPR_MAIN" ] && ! grep -q "launcher_keybind.conf" "$HYPR_MAIN"; then
-        echo "Lưu ý: cần thêm dòng sau vào $HYPR_MAIN (1 lần duy nhất):"
-        echo "  source = $KEYBIND_FILE"
-        read -rp "Tự động thêm dòng này vào hyprland.conf luôn không? (co/khong): " ans
-        if [[ "$ans" =~ ^([Cc][Oo]|[Yy])$ ]]; then
-            if echo "source = $KEYBIND_FILE" >> "$HYPR_MAIN"; then
-                echo "Đã thêm."
-            else
-                echo "Lỗi: không ghi được vào $HYPR_MAIN. Bạn cần tự thêm dòng trên."
-            fi
-        fi
-    fi
-
-    hyprctl reload >/dev/null 2>&1 || true
-fi
-
 echo
 echo "============================================"
 echo " Cài Quick Launcher xong."
 echo " Gọi trực tiếp bằng lệnh: launcher"
-if command -v hyprctl >/dev/null 2>&1; then
-    echo " Hoặc dùng phím tắt: ${KEY_COMBO:-SUPER, W}"
-fi
+echo " Muốn gán phím tắt trong Hyprland: xem"
+echo " components/launcher/KEYBIND.md"
 echo "============================================"
